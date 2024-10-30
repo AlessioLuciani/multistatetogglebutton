@@ -1,13 +1,12 @@
 package org.honorato.multistatetogglebuttonexample;
 
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import org.honorato.multistatetogglebutton.MultiStateToggleButton;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends androidx.appcompat.app.AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
