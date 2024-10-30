@@ -66,6 +66,10 @@ tasks.configureEach { task ->
     }
 }
 
+tasks.register("packageLibrary") {
+    dependsOn("createJar", "assembleRelease")
+}
+
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.7.0'
 }
