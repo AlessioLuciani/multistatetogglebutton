@@ -52,6 +52,20 @@ android {
     }
 }
 
+tasks.configureEach { task ->
+    if (task.name == "assembleRelease") {
+        task.finalizedBy(tasks.register("packageAar") {
+            doLast {
+                copy {
+                    from tasks.named("assembleRelease").outputs.files
+                    into "${buildDir}/outputs/aar"
+                    include "*.aar"
+                }
+            }
+        })
+    }
+}
+
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.7.0'
 }
