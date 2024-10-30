@@ -66,9 +66,22 @@ tasks.configureEach { task ->
     }
 }
 
-tasks.register("packageLibrary") {
-    dependsOn("createJar", "assembleRelease")
+tasks.register('createJar', Jar) {
+    archiveBaseName.set("multistatetogglebutton")
+    archiveVersion.set(mVersionName)
+    from android.sourceSets.main.java.srcDirs
+    from android.sourceSets.main.res.srcDirs
+    include '**/*.class'
+
+    doFirst {
+        println "Creating JAR file..."
+    }
+
+    doLast {
+        println "JAR file created: ${archiveFile.get().asFile}"
+    }
 }
+
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.7.0'
