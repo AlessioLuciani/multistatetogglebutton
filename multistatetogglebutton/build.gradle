@@ -5,7 +5,7 @@ apply plugin: 'maven-publish'
 
 def mVersionCode = 10
 def mVersionName = "0.2.2"
-group = "com.adigujjar"
+group = "com.alessioluciani"
 version = mVersionName
 
 def siteUrl = 'https://github.com/jlhonora/MultiStateToggleButton'
@@ -52,17 +52,15 @@ android {
     }
 }
 
-tasks.configureEach { task ->
-    if (task.name == "assembleRelease") {
-        task.finalizedBy(tasks.register("packageAar") {
-            doLast {
-                copy {
-                    from tasks.named("assembleRelease").outputs.files
-                    into "${buildDir}/outputs/aar"
-                    include "*.aar"
-                }
-            }
-        })
+tasks.register("packageAar") {
+    dependsOn("assembleRelease")
+    doLast {
+        copy {
+            from("$buildDir/outputs/aar")
+            into("$rootDir/release")
+            include("*.aar")
+        }
+        println "AAR package copied to release folder."
     }
 }
 
@@ -87,17 +85,15 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.7.0'
 }
 
-afterEvaluate{
-    publishing {
-        publications {
-            release(MavenPublication) {
-                groupId = 'com.adigujjar'
-                artifactId = 'multistatetogglebutton'
-                version = '0.2.2'
+publishing {
+    publications {
+        release(MavenPublication) {
+            groupId = 'com.alessioluciani'
+            artifactId = 'multistatetogglebutton'
+            version = '0.2.2'
 
-                afterEvaluate {
-                    from components.release
-                }
+            afterEvaluate {
+                from components.findByName("default")
             }
         }
     }
