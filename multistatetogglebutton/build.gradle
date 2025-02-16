@@ -1,10 +1,11 @@
 apply plugin: 'com.android.library'
-apply plugin: 'com.github.dcendents.android-maven'
-apply plugin: 'com.jfrog.bintray'
+apply plugin: 'maven-publish'
+//apply plugin: 'com.github.dcendents.android-maven'
+//apply plugin: 'com.jfrog.bintray'
 
 def mVersionCode = 10
 def mVersionName = "0.2.2"
-group = "org.honorato.multistatetogglebutton"
+group = "com.adigujjar"
 version = mVersionName
 
 def siteUrl = 'https://github.com/jlhonora/MultiStateToggleButton'
@@ -12,17 +13,29 @@ def gitUrl = 'https://github.com/jlhonora/MultiStateToggleButton.git'
 def gitSSHUrl = 'git@github.com:jlhonora/MultiStateToggleButton.git'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.2"
+    namespace "org.honorato.multistatetogglebutton"
+
+    compileSdkVersion 34
 
     defaultConfig {
-        minSdkVersion 11
-        targetSdkVersion 23
+        minSdkVersion 21
+        targetSdkVersion 34
         versionCode mVersionCode
         versionName mVersionName
     }
 
     buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()
+            withJavadocJar()
+        }
     }
 
     sourceSets {
@@ -32,88 +45,80 @@ android {
             res.srcDirs  = ['res']
         }
     }
-}
 
-Properties properties = new Properties()
-File file = project.rootProject.file('local.properties')
-if (file.isFile()) {
-    properties.load(project.rootProject.file('local.properties').newDataInputStream())
-}
-
-bintray {
-    user = properties.getProperty("bintray.user")
-    key = properties.getProperty("bintray.apikey")
-
-    configurations = ['archives']
-    pkg {
-        repo = "maven"
-        name = "MultiStateToggleButton"
-        websiteUrl = siteUrl
-        vcsUrl = gitUrl
-        issueTrackerUrl = siteUrl + '/issues'
-        licenses = ["MIT"]
-        publish = true
-        publicDownloadNumbers = true
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 }
 
-install {
-    repositories.mavenInstaller {
-        pom {
-            project {
-                packaging 'aar'
-
-                name 'A multi-state toggle button for Android'
-                url siteUrl
-
-                // Set your license
-                licenses {
-                    license {
-                        name 'MIT License'
-                        url 'http://opensource.org/licenses/MIT'
-                    }
+tasks.configureEach { task ->
+    if (task.name == "assembleRelease") {
+        task.finalizedBy(tasks.register("packageAar") {
+            doLast {
+                copy {
+                    from tasks.named("assembleRelease").outputs.files
+                    into "${buildDir}/outputs/aar"
+                    include "*.aar"
                 }
-                developers {
-                    developer {
-                        id 'jlhonora'
-                        name 'Jose Luis Honorato'
-                        email 'joseluishonorato@gmail.com'
-                    }
-                }
-                scm {
-                    connection gitUrl
-                    developerConnection gitUrl
-                    url siteUrl
+            }
+        })
+    }
+}
+
+tasks.register('createJar', Jar) {
+    archiveBaseName.set("multistatetogglebutton")
+    archiveVersion.set(mVersionName)
+    from android.sourceSets.main.java.srcDirs
+    from android.sourceSets.main.res.srcDirs
+    include '**/*.class'
+
+    doFirst {
+        println "Creating JAR file..."
+    }
+
+    doLast {
+        println "JAR file created: ${archiveFile.get().asFile}"
+    }
+}
+
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+}
+
+afterEvaluate{
+    publishing {
+        publications {
+            release(MavenPublication) {
+                groupId = 'com.adigujjar'
+                artifactId = 'multistatetogglebutton'
+                version = '0.2.2'
+
+                afterEvaluate {
+                    from components.release
                 }
             }
         }
     }
 }
 
-dependencies {
-    compile 'com.android.support:appcompat-v7:23.4.0'
+task createReleaseTag {
+    doLast {
+        def tagName = "0.2.2"
+        try {
+            exec {
+                commandLine("git", "tag", "-a", tagName, "-m", "Release tag $tagName")
+            }
+            exec {
+                commandLine("git", "push", "origin", tagName)
+            }
+        } catch (e) {
+            println(e.toString())
+        }
+    }
 }
 
-task sourcesJar(type: Jar) {
-    from android.sourceSets.main.java.srcDirs
-    classifier = 'sources'
-}
-
-task javadoc(type: Javadoc) {
-    source = android.sourceSets.main.java.srcDirs
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
-artifacts {
-    archives javadocJar
-    archives sourcesJar
-}
-
-task findConventions << {
-    println project.getConvention()
+configurations.implementation {
+    exclude group: 'org.jetbrains.kotlin', module: 'kotlin-stdlib-jdk8'
 }

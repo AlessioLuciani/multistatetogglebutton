@@ -1,1 +1,4 @@
-include ':example', ':multistatetogglebutton'
+include ':example'
+include ':multistatetogglebutton'
+project(':multistatetogglebutton').projectDir = new File('/Users/piecyfer/Documents/workspace/temp/multistatetogglebutton/multistatetogglebutton')
+
